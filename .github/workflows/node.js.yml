@@ -28,8 +28,21 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build --if-present
+    - name: Compress txt with gzip
+      uses: coco-hkk/compress-action@v2.1
+      id: step1
+      with:
+        file-suffix: 'js'
+        target-directory-path: 'dist'
+        compress-tool: 'gzip'
     - name: Archive production artifacts
       uses: actions/upload-artifact@v2
       with:
         name: dist-index-only
-        path: dist/index.js
+        path: ${{ steps.step1.outputs.archive }}
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/index.js
+          ${{ steps.step1.outputs.archive }}

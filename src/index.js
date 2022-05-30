@@ -146,7 +146,7 @@ export async function searchManga(seriesName, offset=0, limit=10) {
                 "Couldn't determine proper title.",
                 { raw_data: result }
             )
-            return nil;
+            return null;
         }
 
         const coverArts = result.relationships.filter(rel => (

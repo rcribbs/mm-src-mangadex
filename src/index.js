@@ -232,15 +232,40 @@ export async function listChapters(
     seriesIdentifier, offset=0, limit=500, since=null, order='asc'
 ) {
     const languages = ["en"];
-    let finalUrl = new URL(`https://api.mangadex.org/manga/${seriesIdentifier}/aggregate`);
+
+    let finalUrl = new URL(`https://api.mangadex.org/manga/${seriesIdentifier}/feed`);
     let searchParams = new URLSearchParams({
+        'translatedLanguage[]': languages,
+        offset: offset,
+        limit: limit,
+        'order[chapter]': order,
+        'includes[]': "scanlation_group"
+    });
+    if (since) {
+        const formattedSince = since.toISOString().split(".")[0];
+        searchParams.set("updatedAtSince", formattedSince);
+    }
+    finalUrl.search = searchParams.toString();
+
+    let response = await fetch(finalUrl);
+    let json = await response.json();
+
+    if(json.data.length == 0) {
+        console.log(`No new chapters found for series.`, { id: seriesIdentifier });
+        return ChapterList({
+            chapters: [],
+        })
+    }
+
+    finalUrl = new URL(`https://api.mangadex.org/manga/${seriesIdentifier}/aggregate`);
+    searchParams = new URLSearchParams({
         'translatedLanguage[]': languages,
     });
     console.debug("Final search params.", { params: searchParams.toString() });
     finalUrl.search = searchParams.toString();
 
-    let response = await fetch(finalUrl);
-    let json = await response.json();
+    response = await fetch(finalUrl);
+    json = await response.json();
 
     let idAbsoluteChapterNumbers = {};
     console.log(`volumes: ${JSON.stringify(json.volumes)}`);
@@ -259,21 +284,6 @@ export async function listChapters(
 
     console.log("Absolute chapter numbers (main).", { chapNumbers: idAbsoluteChapterNumbers });
 
-    finalUrl = new URL(`https://api.mangadex.org/manga/${seriesIdentifier}/feed`);
-    searchParams = new URLSearchParams({
-        'translatedLanguage[]': languages,
-        offset: offset,
-        limit: limit,
-        'order[chapter]': order,
-        'includes[]': "scanlation_group"
-    });
-    if (since) {
-        searchParams.set("updatedAtSince", since);
-    }
-    finalUrl.search = searchParams.toString();
-
-    response = await fetch(finalUrl);
-    json = await response.json();
 
     const groupIdMap = {};
 
@@ -321,12 +331,11 @@ export async function listChapters(
 }
 
 export async function getChapter(chapterIdentifier) {
-    // TODO: implement get chapter logic here.
-
-    let response = await fetch(
-        `https://api.mangadex.org/at-home/server/${chapterIdentifier}?forcePort443=true`
-    );
+    const url = `https://api.mangadex.org/at-home/server/${chapterIdentifier}?forcePort443=true`
+    console.debug(`Chapter URL: ${url}`);
+    let response = await fetch(url);
     let json = await response.json();
+    console.debug(`Chapter response: ${json}`);
     const { baseUrl, chapter } = json;
     const { data: partialUrls, hash } = chapter;
     let fullUrls = partialUrls.map(url => (

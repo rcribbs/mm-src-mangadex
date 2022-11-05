@@ -248,11 +248,11 @@ export async function listChapters(
     finalUrl.search = searchParams.toString();
 
     let response = await fetch(finalUrl);
-    let json = await response.json();
+    let chapJson = await response.json();
 
-    if(json.data.length == 0) {
+    if(chapJson.data.length == 0) {
         console.log(`No new chapters found for series.`, { id: seriesIdentifier });
-        return ChapterList({
+        return new ChapterList({
             chapters: [],
         })
     }
@@ -265,7 +265,7 @@ export async function listChapters(
     finalUrl.search = searchParams.toString();
 
     response = await fetch(finalUrl);
-    json = await response.json();
+    let json = await response.json();
 
     let idAbsoluteChapterNumbers = {};
     console.log(`volumes: ${JSON.stringify(json.volumes)}`);
@@ -287,7 +287,7 @@ export async function listChapters(
 
     const groupIdMap = {};
 
-    const chapters = await Promise.all(json.data.map(async result => {
+    const chapters = await Promise.all(chapJson.data.map(async result => {
         const id = result.id;
         const {
             title,

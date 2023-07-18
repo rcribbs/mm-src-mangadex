@@ -6,7 +6,7 @@
     "build": "parcel build ./src/index.js --no-source-maps --global mangaMan"
   },
   "main": "src/index.js",
-  "browserslist": [
+  "browsersList": [
     "last 2 iOS major versions"
   ],
   "keywords": [

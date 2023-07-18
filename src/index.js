@@ -239,7 +239,10 @@ export async function listChapters(
         offset: offset,
         limit: limit,
         'order[chapter]': order,
-        'includes[]': "scanlation_group"
+        'includes[]': "scanlation_group",
+        includeEmptyPages: 0,
+        includeFuturePublishAt: 0,
+        includeExternalUrl: 0,
     });
     if (since) {
         const formattedSince = since.toISOString().split(".")[0];
@@ -334,6 +337,15 @@ export async function getChapter(chapterIdentifier) {
     const url = `https://api.mangadex.org/at-home/server/${chapterIdentifier}?forcePort443=true`
     console.debug(`Chapter URL: ${url}`);
     let response = await fetch(url);
+    if(!response.ok) {
+        let respText = ""
+        try {
+            respText = await response.text;
+        } catch {}
+
+        throw new Error(`Bad response from server: ${response.status} - ${response.statusText}\n${respText}`);
+    }
+
     let json = await response.json();
     console.debug(`Chapter response: ${json}`);
     const { baseUrl, chapter } = json;
